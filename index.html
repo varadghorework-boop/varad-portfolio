@@ -10,7 +10,7 @@
    NLE timeline band; "best of each genre" bento whose last tile is the Vault folder; the Vault opens as a
    full-screen project bin holding every film. Dark-first. */
 :root{
-  --bg:#0f1117; --bg-2:#171a22; --bg-3:#1f2330; --fg:#ece7dc; --muted:#9b98a3; --line:rgba(236,231,220,.12);
+  --bg:#15161b; --bg-2:#1c1e25; --bg-3:#262933; --fg:#ece7dc; --muted:#9b98a3; --line:rgba(236,231,220,.12);
   --accent:#f0a830; --accent-ink:#1b1305; --rec:#e5484d; --scrim:rgba(8,9,13,.86);
   --folder:#c98a24; --folder-2:#e2a443; --folder-ink:#2a1a04;
   --f-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
@@ -22,14 +22,8 @@
   --gutter-l:max(16px,env(safe-area-inset-left,0px)); --gutter-r:max(16px,env(safe-area-inset-right,0px));
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
-  --bg:#f1f0eb; --bg-2:#e7e5de; --bg-3:#dcd9d0; --fg:#15161c; --muted:#5d5b66; --line:rgba(21,22,28,.14);
-  --accent:#b87406; --accent-ink:#fff; --rec:#c92a2f; --scrim:rgba(20,20,26,.82);
-  --folder:#d39a3a; --folder-2:#e9b65c; --folder-ink:#2a1a04; color-scheme:light}}
-:root[data-theme="light"]{
-  --bg:#f1f0eb; --bg-2:#e7e5de; --bg-3:#dcd9d0; --fg:#15161c; --muted:#5d5b66; --line:rgba(21,22,28,.14);
-  --accent:#b87406; --accent-ink:#fff; --rec:#c92a2f; --scrim:rgba(20,20,26,.82);
-  --folder:#d39a3a; --folder-2:#e9b65c; --folder-ink:#2a1a04; color-scheme:light}
+/* one dark look in every theme: the site is a dark editing suite by design */
+
 
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}

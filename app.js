@@ -51,6 +51,7 @@
     if (pr.whatsapp) lines.push('<a class="btn" href="' + esc(pr.whatsapp) + '" target="_blank" rel="noopener">WhatsApp me</a>');
     if (pr.instagram) lines.push('<a class="btn" href="' + esc(pr.instagram) + '" target="_blank" rel="noopener">Instagram @' + esc(pr.handle) + "</a>");
     if (pr.email) lines.push('<button class="btn" data-copy="' + esc(pr.email) + '">' + esc(pr.email) + ' <span class="mono">Copy</span></button>');
+    if (pr.linkedin) lines.push('<a class="btn" href="' + esc(pr.linkedin) + '" target="_blank" rel="noopener">LinkedIn ↗</a>');
     $("#contactLines").innerHTML = lines.join("");
     document.title = (pr.name || "Portfolio") + " Films";
   }

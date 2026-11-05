@@ -21,7 +21,7 @@ window.PORTFOLIO = {
    "Social-first reels",
    "Captions & subtitles"
   ],
-  "email": "",
+  "email": "varadghorework@gmail.com",
   "phone": "+91 98342 54702",
   "location": "India",
   "availableText": "Open to freelance and full-time roles",
@@ -40,7 +40,8 @@ window.PORTFOLIO = {
    "Motion graphics & titles",
    "Captions & sound",
    "AI-assisted films"
-  ]
+  ],
+  "linkedin": "https://www.linkedin.com/in/varad-ghore-8084a831a"
  },
  "categories": [
   {
