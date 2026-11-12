@@ -56,7 +56,8 @@
     document.title = (pr.name || "Portfolio") + " Films";
   }
 
-  function brandsOf(list) { return Array.from(new Set(list.map(function (p) { return brandKey(p.client); }))); }
+  // personal films and pitches (flag nobrand) aren't client brands, so they stay out of brand counts and the logo reel
+  function brandsOf(list) { return Array.from(new Set(list.filter(function (p) { return !p.nobrand; }).map(function (p) { return brandKey(p.client); }))); }
 
   function renderStats() {
     var v = visible(), secs = v.reduce(function (a, p) { return a + (p.dur || 0); }, 0);
@@ -110,7 +111,7 @@
 
   function renderClients() {
     var map = {};
-    visible().forEach(function (p) { var k = brandKey(p.client); (map[k] = map[k] || []).push(p); });
+    visible().forEach(function (p) { if (p.nobrand) return; var k = brandKey(p.client); (map[k] = map[k] || []).push(p); });
     var rows = Object.keys(map).sort(function (a, b) { return map[b].length - map[a].length || a.localeCompare(b); });
     $("#brandNote").textContent = rows.length + " and counting";
     // each brand is one frame of 35mm film: a still from its best film, the logo taped on, edge print below
@@ -164,7 +165,48 @@
   $("#vaultClose").onclick = function () { vault.close(); };
   $("#vSearch").addEventListener("input", function (e) { vfilter.q = e.target.value; renderVault(); });
 
-  function renderAll() { renderProfile(); renderStats(); renderTimeline(); renderFront(); renderClients(); if (vault.open) renderVault(); if (editing) renderDrawer(); }
+  /* ---------- built from scratch (AI + code films) ---------- */
+  // films made from scratch lead; edits that also used real footage (e.g. Crest EP01) follow
+  var labList = function () {
+    var l = (editing ? state.projects : visible()).filter(function (p) { return p.lab; });
+    return l.filter(function (p) { return p.cat === "scratch"; }).concat(l.filter(function (p) { return p.cat !== "scratch"; }));
+  };
+  function renderLab() {
+    $("#labGrid").innerHTML = labList().map(function (p, i) {
+      var vert = !isWide(p), made = p.made || "AI + CODE";
+      // the first film is the big tile top-left; the sixth sits big on the right two rows below, so 10 films fill a 4-column grid
+      var size = i === 0 ? " big" : i === 5 ? " big big2" : "";
+      var kind = made === "AI" ? " ai" : /CODE/.test(made) && !/AI|FOOTAGE/.test(made) ? " code" : "";
+      return '<button class="card lab' + size + (p.hidden ? " is-hidden" : "") + '" data-open="' + esc(p.id) + '"' + (vert ? ' data-fit="contain"' : "") + ' data-pcur aria-label="Play ' + esc(p.title) + '">' +
+        '<div class="frame">' + (vert ? '<img class="blur" src="' + esc(p.poster) + '" alt="" loading="lazy"><img class="fit" src="' + esc(p.poster) + '" alt="" loading="lazy">'
+                                       : '<img src="' + esc(p.poster) + '" alt="" loading="lazy">') + "</div>" +
+        '<span class="shade"></span><span class="made' + kind + '">' + esc(made) + '</span><span class="tc">' + esc(p.ratio) + " · " + mmss(p.dur) + "</span>" +
+        '<span class="meta"><small>' + esc(p.client) + "</small><strong>" + esc(p.title) + "</strong></span></button>";
+    }).join("");
+  }
+
+  // the terminal types a plausible build log, line by line, then starts over
+  var TERM = [["$ ", "generate --style woodcut \"bell founder, snowy village\""], ["✓ ", "48 shots · 1920×1080"],
+    ["$ ", "npx remotion render Rovema1Gram --fps 30"], ["✓ ", "rendered 30.0 s · 1080p"],
+    ["$ ", "ffmpeg -i vo.wav -af loudnorm voice.wav"], ["✓ ", "voice cleaned · ready to cut"]];
+  function termRender(n, partial) {
+    var html = TERM.slice(0, n).map(function (l) { return '<span class="' + (l[0] === "$ " ? "p" : "ok") + '">' + l[0] + "</span>" + esc(l[1]); }).join("\n");
+    if (partial != null) html += (n ? "\n" : "") + '<span class="p">$ </span>' + esc(partial);
+    $("#termText").innerHTML = html + '<span class="cur"></span>';
+  }
+  (function termLoop() {
+    if (reduceMotion) { termRender(TERM.length); return; }
+    var line = 0, ch = 0;
+    (function step() {
+      if (line >= TERM.length) { termRender(TERM.length); setTimeout(function () { line = 0; ch = 0; step(); }, 2600); return; }
+      var l = TERM[line];
+      if (l[0] === "✓ ") { line++; termRender(line); setTimeout(step, 380); return; }
+      if (ch <= l[1].length) { termRender(line, l[1].slice(0, ch)); ch++; setTimeout(step, 26); return; }
+      line++; ch = 0; termRender(line); setTimeout(step, 420);
+    })();
+  })();
+
+  function renderAll() { renderProfile(); renderStats(); renderTimeline(); renderFront(); renderLab(); renderClients(); if (vault.open) renderVault(); if (editing) renderDrawer(); }
 
   /* ---------- hover preview (front cards and Vault items) ---------- */
   document.addEventListener("pointerover", function (e) {
@@ -174,7 +216,7 @@
     var v = document.createElement("video");
     v.muted = true; v.loop = true; v.playsInline = true; v.preload = "auto"; v.src = p.loop || p.video;
     // laid over the poster: swapping the poster out mid-click would swallow the click
-    v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:" + (host.classList.contains("item") ? "contain;background:#07080b" : "cover");
+    v.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:" + (host.classList.contains("item") || host.dataset.fit === "contain" ? "contain;background:#07080b" : "cover");
     (host.querySelector(".frame") || host.querySelector(".th")).appendChild(v); v.play().catch(function () {});
     host.addEventListener("pointerleave", function out() {
       host.removeEventListener("pointerleave", out);
@@ -195,7 +237,7 @@
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-open],[data-vault],[data-bin],[data-client],[data-copy]");
     if (!t) return;
-    if (t.dataset.open) return openViewer(t.dataset.open);
+    if (t.dataset.open) return openViewer(t.dataset.open, t.closest("#lab") ? "lab" : "");
     if (t.hasAttribute("data-vault")) return openVault("all");
     if (t.dataset.bin) { vfilter.bin = t.dataset.bin; renderVault(); $("#items").scrollTop = 0; return; }
     if (t.dataset.client) return openVault("c:" + t.dataset.client);
@@ -207,8 +249,8 @@
 
   /* ---------- viewer ---------- */
   var dlg = $("#viewer"), vv = $("#vVideo"), cur = 0, seq = [];
-  function openViewer(id) {
-    seq = vault.open ? vaultList() : (editing ? state.projects : visible()).filter(function (p) { return p.showcase; });
+  function openViewer(id, ctx) {
+    seq = vault.open ? vaultList() : ctx === "lab" ? labList() : (editing ? state.projects : visible()).filter(function (p) { return p.showcase; });
     cur = seq.findIndex(function (p) { return p.id === id; });
     if (cur < 0) { seq = state.projects; cur = seq.findIndex(function (p) { return p.id === id; }); }
     show(seq[cur]);
